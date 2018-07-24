@@ -26,42 +26,34 @@ import org.snmp4j.util.TreeEvent;
 import org.snmp4j.util.TreeUtils;
 
 public class SNMPFunction {
-	public static CommunityTarget initTarget(String community,String ip, String port,String version ) throws Exception {
+	public static final int version1 = 0;
+	public static final int version2c = 1;
+	public static final int version3 = 3;
+
+	public static CommunityTarget initTarget(String community, String ip, int port, int version) throws Exception {
 		CommunityTarget target = new CommunityTarget();
 		target.setCommunity(new OctetString(community));
-		target.setAddress(GenericAddress.parse("udp:"+ip+"/"+port));
+		target.setAddress(GenericAddress.parse("udp:" + ip + "/" +String.valueOf(port)));
 		target.setRetries(2);
 		target.setTimeout(1500);
-		if(version.equals("version1")) 
+		if (version == version1)
 			target.setVersion(SnmpConstants.version1);
-		else if(version.equals("version3"))
+		else if (version == version3)
 			target.setVersion(SnmpConstants.version3);
-		else 
-			target.setVersion(SnmpConstants.version2c);
-		return target;
-	}
-	public static CommunityTarget initTargetDefaultCommunityString(String ip, String port, String version) throws Exception{
-		CommunityTarget target = new CommunityTarget();
-		target.setCommunity(new OctetString("public"));
-		target.setAddress(GenericAddress.parse("udp:"+ip+"/"+port));
-		target.setRetries(2);
-		target.setTimeout(1500);
-		if(version.equals("version1")) 
-			target.setVersion(SnmpConstants.version1);
-		else if(version.equals("version2c"))
-			target.setVersion(SnmpConstants.version2c);
 		else
-			target.setVersion(SnmpConstants.version3);
+			target.setVersion(SnmpConstants.version2c);
 		return target;
 	}
-	public static CommunityTarget initTargetDefaultVersion(String community,String ip, String port) throws Exception{
-		CommunityTarget target = new CommunityTarget();
-		target.setCommunity(new OctetString(community));
-		target.setAddress(GenericAddress.parse("udp:"+ip+"/"+port));
-		target.setRetries(2);
-		target.setTimeout(1500);
-		target.setVersion(SnmpConstants.version2c);
-		return target;
+
+	public static CommunityTarget initTargetDefaultCommunityString(String ip, int port, int version)
+			throws Exception {
+		
+		return initTarget("public", ip, port, version);
+	}
+
+	public static CommunityTarget initTargetDefaultVersion(String community, String ip, int port) throws Exception {
+		
+		return initTarget(community, ip, port, version2c);
 	}
 
 	public static boolean set(Target target, String oid, String value) throws Exception {
@@ -240,5 +232,4 @@ public class SNMPFunction {
 		}
 		return null;
 	}
-
 }

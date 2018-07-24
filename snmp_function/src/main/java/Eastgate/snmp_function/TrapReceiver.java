@@ -36,7 +36,7 @@ public class TrapReceiver implements CommandResponder {
 		MultiThreadedMessageDispatcher dispatcher = new MultiThreadedMessageDispatcher(threadPool,
 				new MessageDispatcherImpl());
 		Address listenAddress = GenericAddress.parse(System.getProperty(
-				"snmp4j.listenAddress", "udp:127.0.0.1/162"));
+				"snmp4j.listenAddress", "localhost/162"));
 		TransportMapping transport;
 		if (listenAddress instanceof UdpAddress) {
 			transport = new DefaultUdpTransportMapping(
@@ -71,7 +71,7 @@ public class TrapReceiver implements CommandResponder {
 		}
 		Vector<? extends VariableBinding> vbs = event.getPDU().getVariableBindings();
 		for (VariableBinding vb : vbs) {
-			System.out.println(vb.getOid() + " = " + vb.getVariable());
+			System.out.println(vb.getOid().toString() + " = " + vb.getVariable().toString());
 		}
 	}
 }

@@ -8,7 +8,7 @@ import Eastgate.snmp_function.SNMPFunction;
 
 public class TestSNMPFunction {
 	public static void main(String[] args) throws Exception {
-		CommunityTarget target = SNMPFunction.initTarget("209ijvfwer0df92jd", "10.10.1.94", "161", "version2c");
+		CommunityTarget target = SNMPFunction.initTarget("209ijvfwer0df92jd", "10.10.1.94", 161, 1);
 		Map<String, String> result1 = SNMPFunction.getNext(target, ".1.3.6.1.2.1.1.1.0");
 		if (result1 != null)
 			for (Map.Entry<String, String> entry : result1.entrySet()) {
