@@ -64,8 +64,7 @@ public class SNMPFunction {
 		return target;
 	}
 
-
-	public static boolean snmpSet(Target target, String oid, String value) throws Exception {
+	public static boolean set(Target target, String oid, String value) throws Exception {
 		TransportMapping<? extends Address> transport = new DefaultUdpTransportMapping();
 		Snmp snmp = new Snmp(transport);
 		transport.listen();
@@ -94,7 +93,7 @@ public class SNMPFunction {
 		}
 	}
 
-	public static Map<String, String> snmpGet(Target target, String oid) throws IOException {
+	public static Map<String, String> get(Target target, String oid) throws IOException {
 		Map<String, String> result = new TreeMap<String, String>();
 		TransportMapping<? extends Address> transport = new DefaultUdpTransportMapping();
 		Snmp snmp = new Snmp(transport);
@@ -133,7 +132,7 @@ public class SNMPFunction {
 		return null;
 	}
 
-	public static Map<String, String> snmpGetNext(Target target, String oid) throws IOException {
+	public static Map<String, String> getNext(Target target, String oid) throws IOException {
 		Map<String, String> result = new TreeMap();
 		TransportMapping<? extends Address> transport = new DefaultUdpTransportMapping();
 		Snmp snmp = new Snmp(transport);

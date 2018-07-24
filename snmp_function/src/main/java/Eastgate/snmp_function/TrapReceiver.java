@@ -1,23 +1,26 @@
 package Eastgate.snmp_function;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.Vector;
 
 import org.snmp4j.CommandResponder;
 import org.snmp4j.CommandResponderEvent;
-import org.snmp4j.CommunityTarget;
-import org.snmp4j.MessageDispatcher;
 import org.snmp4j.MessageDispatcherImpl;
-import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
+import org.snmp4j.TransportMapping;
 import org.snmp4j.mp.MPv1;
 import org.snmp4j.mp.MPv2c;
-import org.snmp4j.security.Priv3DES;
+import org.snmp4j.mp.MPv3;
+import org.snmp4j.security.SecurityModels;
 import org.snmp4j.security.SecurityProtocols;
+import org.snmp4j.security.USM;
+import org.snmp4j.smi.Address;
+import org.snmp4j.smi.GenericAddress;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.TcpAddress;
-import org.snmp4j.smi.TransportIpAddress;
 import org.snmp4j.smi.UdpAddress;
-import org.snmp4j.transport.AbstractTransportMapping;
+import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultTcpTransportMapping;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.MultiThreadedMessageDispatcher;
@@ -27,65 +30,48 @@ public class TrapReceiver implements CommandResponder {
 
 	public TrapReceiver() {
 	}
-
-	public static void main(String[] args) {
-		TrapReceiver snmp4jTrapReceiver = new TrapReceiver();
-		try {
-			snmp4jTrapReceiver.listen(new UdpAddress("localhost/162"));
-		} catch (IOException e) {
-			System.err.println("Error in Listening for Trap");
-			System.err.println("Exception Message = " + e.getMessage());
-		}
-	}
-
-	/**
-	 * This method will listen for traps and response pdu's from SNMP agent.
-	 */
-	public synchronized void listen(TransportIpAddress address) throws IOException {
-		AbstractTransportMapping transport;
-		if (address instanceof TcpAddress) {
-			transport = new DefaultTcpTransportMapping((TcpAddress) address);
+	Snmp snmp = null;
+	private void init() throws UnknownHostException, IOException {
+		ThreadPool threadPool = ThreadPool.create("TrapPool", 2);
+		MultiThreadedMessageDispatcher dispatcher = new MultiThreadedMessageDispatcher(threadPool,
+				new MessageDispatcherImpl());
+		Address listenAddress = GenericAddress.parse(System.getProperty(
+				"snmp4j.listenAddress", "udp:127.0.0.1/162"));
+		TransportMapping transport;
+		if (listenAddress instanceof UdpAddress) {
+			transport = new DefaultUdpTransportMapping(
+					(UdpAddress) listenAddress);
 		} else {
-			transport = new DefaultUdpTransportMapping((UdpAddress) address);
+			transport = new DefaultTcpTransportMapping(
+					(TcpAddress) listenAddress);
 		}
-
-		ThreadPool threadPool = ThreadPool.create("DispatcherPool", 10);
-		MessageDispatcher mtDispatcher = new MultiThreadedMessageDispatcher(threadPool, new MessageDispatcherImpl());
-
-		// add message processing models
-		mtDispatcher.addMessageProcessingModel(new MPv1());
-		mtDispatcher.addMessageProcessingModel(new MPv2c());
-
-		// add all security protocols
-		SecurityProtocols.getInstance().addDefaultProtocols();
-		SecurityProtocols.getInstance().addPrivacyProtocol(new Priv3DES());
-
-		// Create Target
-		//CommunityTarget target = new CommunityTarget();
-		//target.setCommunity(new OctetString("209ijvfwer0df92jd"));
-
-		Snmp snmp = new Snmp(mtDispatcher, transport);
-		snmp.addCommandResponder((CommandResponder) this);
-
-		transport.listen();
-		System.out.println("Listening on " + address);
-
+		snmp = new Snmp(dispatcher, transport);
+		snmp.getMessageDispatcher().addMessageProcessingModel(new MPv1());
+		snmp.getMessageDispatcher().addMessageProcessingModel(new MPv2c());
+		snmp.getMessageDispatcher().addMessageProcessingModel(new MPv3());
+		USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(
+				MPv3.createLocalEngineID()), 0);
+		SecurityModels.getInstance().addSecurityModel(usm);
+		snmp.listen();
+	}
+	public void run() {
+		System.out.println(" Trap Receiver run ...");
 		try {
-			this.wait();
-		} catch (InterruptedException ex) {
-			Thread.currentThread().interrupt();
+			init();
+			snmp.addCommandResponder(this);
+			System.out.println("Trap message ");
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
-
-	/**
-	 * This method will be called whenever a pdu is received on the given port
-	 * specified in the listen() method
-	 */
-	public synchronized void processPdu(CommandResponderEvent cmdRespEvent) {
-		PDU pdu = cmdRespEvent.getPDU();
-		if (pdu != null) {
-			System.out.println("Trap Type = " + pdu.getType());
-			System.out.println("Variables = " + pdu.getVariableBindings());
+	public void processPdu(CommandResponderEvent event) {
+		if (event == null || event.getPDU() == null) {
+			System.out.println("[Warn] ResponderEvent or PDU is null");
+			return;
+		}
+		Vector<? extends VariableBinding> vbs = event.getPDU().getVariableBindings();
+		for (VariableBinding vb : vbs) {
+			System.out.println(vb.getOid() + " = " + vb.getVariable());
 		}
 	}
 }
