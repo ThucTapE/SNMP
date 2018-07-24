@@ -26,65 +26,44 @@ import org.snmp4j.util.TreeEvent;
 import org.snmp4j.util.TreeUtils;
 
 public class SNMPFunction {
-	public static void main(String[] args) throws Exception {
-
+	public static CommunityTarget initTarget(String community,String ip, String port,String version ) throws Exception {
 		CommunityTarget target = new CommunityTarget();
-		target.setCommunity(new OctetString("209ijvfwer0df92jd"));
-		target.setAddress(GenericAddress.parse("udp:10.10.1.94/161")); // supply your own IP and port
+		target.setCommunity(new OctetString(community));
+		target.setAddress(GenericAddress.parse("udp:"+ip+"/"+port));
+		target.setRetries(2);
+		target.setTimeout(1500);
+		if(version.equals("version1")) 
+			target.setVersion(SnmpConstants.version1);
+		else if(version.equals("version3"))
+			target.setVersion(SnmpConstants.version3);
+		else 
+			target.setVersion(SnmpConstants.version2c);
+		return target;
+	}
+	public static CommunityTarget initTargetDefaultCommunityString(String ip, String port, String version) throws Exception{
+		CommunityTarget target = new CommunityTarget();
+		target.setCommunity(new OctetString("public"));
+		target.setAddress(GenericAddress.parse("udp:"+ip+"/"+port));
+		target.setRetries(2);
+		target.setTimeout(1500);
+		if(version.equals("version1")) 
+			target.setVersion(SnmpConstants.version1);
+		else if(version.equals("version2c"))
+			target.setVersion(SnmpConstants.version2c);
+		else
+			target.setVersion(SnmpConstants.version3);
+		return target;
+	}
+	public static CommunityTarget initTargetDefaultVersion(String community,String ip, String port) throws Exception{
+		CommunityTarget target = new CommunityTarget();
+		target.setCommunity(new OctetString(community));
+		target.setAddress(GenericAddress.parse("udp:"+ip+"/"+port));
 		target.setRetries(2);
 		target.setTimeout(1500);
 		target.setVersion(SnmpConstants.version2c);
-
-		Map<String, String> result = snmpGet(target, ".1.3.6.1.2.1");
-		if (result != null)
-			for (Map.Entry<String, String> entry : result.entrySet()) {
-				System.out.println(entry.getKey() + " ---- " + entry.getValue());
-			}
-		
-		Map<String, String> result1 = snmpGetNext(target, ".1.3.6.1.2.1.1.1.0");
-		if (result1 != null)
-			for (Map.Entry<String, String> entry : result1.entrySet()) {
-				System.out.println(entry.getKey() + " ---- " + entry.getValue());
-			}
-		// Map<String, String> result = doWalk(".1.3.6.1.2.1", target); // ifTable,
-		// mib-2 interfaces
-		// snmpwalk
-		/*
-		 * for (Map.Entry<String, String> entry : result.entrySet()) {
-		 * System.out.println( entry.getKey() +" ---- "+entry.getValue());
-		 * 
-		 * }
-		 * 
-		 * 
-		 */
-		// test get
-		// snmpGet(target,".1.3.6.1.2.1.6.2.0");
-
-		// test getNext
-		// snmGetNext(target, ".1.3.6.1.2.1.6.2.0");
-
-		// test
-		// snmpSet(target, ".1.3.6.1.2.1.6.2.0", "200");
-
-		// test getBulk
-		/*
-		 * VariableBinding[] array = {new VariableBinding(new OID(".1.3.6.1.2.1.7")),
-		 * new VariableBinding(new OID(".1.3.6.1.2.1.7.1.0")), // new
-		 * VariableBinding(new OID("1.3.6.1.4.1.2000.1.3.1.1.10")), //new
-		 * VariableBinding(new OID("1.3.6.1.4.1.2000.1.2.5.1.19")) }; Vector<? extends
-		 * VariableBinding> vbs = getBulk(target, array); if(vbs == null)
-		 * System.out.println("Time out"); else { for (VariableBinding vb : vbs) {
-		 * System.out.println(vb.getVariable().toString()); } }
-		 */
-
-		// test snmpset
-
-		// snmpGet(target,".1.3.6.1.2.1.1.6.0");
-		// if(snmpSet(target, ".1.3.6.1.2.1.1.6.0", "Hello") == true)
-		// snmpGet(target,".1.3.6.1.2.1.1.6.0");
-		// else
-		// System.out.println("Error");
+		return target;
 	}
+
 
 	public static boolean snmpSet(Target target, String oid, String value) throws Exception {
 		TransportMapping<? extends Address> transport = new DefaultUdpTransportMapping();
@@ -187,7 +166,6 @@ public class SNMPFunction {
 					// System.out.println("Snmp GetNext Response for sysObjectID = " +
 					// responsePDU.getVariableBindings());
 				}
-
 			}
 		}
 		snmp.close();

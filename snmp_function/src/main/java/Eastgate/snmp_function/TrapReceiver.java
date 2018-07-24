@@ -61,8 +61,8 @@ public class TrapReceiver implements CommandResponder {
 		SecurityProtocols.getInstance().addPrivacyProtocol(new Priv3DES());
 
 		// Create Target
-		CommunityTarget target = new CommunityTarget();
-		target.setCommunity(new OctetString("209ijvfwer0df92jd"));
+		//CommunityTarget target = new CommunityTarget();
+		//target.setCommunity(new OctetString("209ijvfwer0df92jd"));
 
 		Snmp snmp = new Snmp(mtDispatcher, transport);
 		snmp.addCommandResponder((CommandResponder) this);
