@@ -29,8 +29,9 @@ public class SNMPFunction {
 	public static final int version1 = 0;
 	public static final int version2c = 1;
 	public static final int version3 = 3;
+	public static final int port = 162;
 
-	public static CommunityTarget initTarget(String community, String ip, int port, int version) throws Exception {
+	public static CommunityTarget initTarget(String community, String ip, int version) throws Exception {
 		CommunityTarget target = new CommunityTarget();
 		target.setCommunity(new OctetString(community));
 		target.setAddress(GenericAddress.parse("udp:" + ip + "/" +String.valueOf(port)));
@@ -45,15 +46,15 @@ public class SNMPFunction {
 		return target;
 	}
 
-	public static CommunityTarget initTargetDefaultCommunityString(String ip, int port, int version)
+	public static CommunityTarget initTargetDefaultCommunityString(String ip, int version)
 			throws Exception {
 		
-		return initTarget("public", ip, port, version);
+		return initTarget("public", ip, version);
 	}
 
-	public static CommunityTarget initTargetDefaultVersion(String community, String ip, int port) throws Exception {
+	public static CommunityTarget initTargetDefaultVersion(String community, String ip) throws Exception {
 		
-		return initTarget(community, ip, port, version2c);
+		return initTarget(community, ip, version2c);
 	}
 
 	public static boolean set(Target target, String oid, String value) throws Exception {
