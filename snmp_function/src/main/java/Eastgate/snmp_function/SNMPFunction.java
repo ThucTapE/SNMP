@@ -29,12 +29,12 @@ public class SNMPFunction {
 	public static final int version1 = 0;
 	public static final int version2c = 1;
 	public static final int version3 = 3;
-	public static final int port = 162;
+	public static final int port = 161;
 
 	public static CommunityTarget initTarget(String community, String ip, int version) throws Exception {
 		CommunityTarget target = new CommunityTarget();
 		target.setCommunity(new OctetString(community));
-		target.setAddress(GenericAddress.parse("udp:" + ip + "/" +String.valueOf(port)));
+		target.setAddress(GenericAddress.parse("udp:" + ip + "/" + String.valueOf(port)));
 		target.setRetries(2);
 		target.setTimeout(1500);
 		if (version == version1)
