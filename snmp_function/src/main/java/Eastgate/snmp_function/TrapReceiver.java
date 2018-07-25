@@ -2,10 +2,8 @@ package Eastgate.snmp_function;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.Vector;
 
 import org.snmp4j.CommandResponder;
-import org.snmp4j.CommandResponderEvent;
 import org.snmp4j.MessageDispatcherImpl;
 import org.snmp4j.Snmp;
 import org.snmp4j.TransportMapping;
@@ -20,23 +18,28 @@ import org.snmp4j.smi.GenericAddress;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.TcpAddress;
 import org.snmp4j.smi.UdpAddress;
-import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultTcpTransportMapping;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.MultiThreadedMessageDispatcher;
 import org.snmp4j.util.ThreadPool;
 
-public class TrapReceiver implements CommandResponder {
-
-	public TrapReceiver() {
+public class TrapReceiver {
+	public TrapReceiver() throws UnknownHostException, IOException {
+		listenAddress = GenericAddress.parse("localhost/162");
+		init();
 	}
-	Snmp snmp = null;
+	public TrapReceiver(String address) throws UnknownHostException, IOException {
+		init();
+		listenAddress = GenericAddress.parse(address);
+	}
+	private Address listenAddress;
+	private Snmp snmp;
 	private void init() throws UnknownHostException, IOException {
 		ThreadPool threadPool = ThreadPool.create("TrapPool", 2);
 		MultiThreadedMessageDispatcher dispatcher = new MultiThreadedMessageDispatcher(threadPool,
 				new MessageDispatcherImpl());
-		Address listenAddress = GenericAddress.parse(System.getProperty(
-				"snmp4j.listenAddress", "localhost/162"));
+		//Address listenAddress = GenericAddress.parse(System.getProperty(
+			//	"snmp4j.listenAddress", "localhost/162"));
 		TransportMapping transport;
 		if (listenAddress instanceof UdpAddress) {
 			transport = new DefaultUdpTransportMapping(
@@ -54,24 +57,16 @@ public class TrapReceiver implements CommandResponder {
 		SecurityModels.getInstance().addSecurityModel(usm);
 		snmp.listen();
 	}
-	public void run() {
-		System.out.println(" Trap Receiver run ...");
-		try {
-			init();
-			snmp.addCommandResponder(this);
-			System.out.println("Trap message ");
-		} catch (Exception ex) {
-			ex.printStackTrace();
+	
+	public void setCommandResponder(CommandResponder cr) throws UnknownHostException, IOException {
+		snmp.addCommandResponder(cr);
+	}
+	public void setMultiCommandResponder(CommandResponder [] crs) throws UnknownHostException, IOException {
+		for(CommandResponder cr : crs) {
+			setCommandResponder(cr);
 		}
 	}
-	public void processPdu(CommandResponderEvent event) {
-		if (event == null || event.getPDU() == null) {
-			System.out.println("[Warn] ResponderEvent or PDU is null");
-			return;
-		}
-		Vector<? extends VariableBinding> vbs = event.getPDU().getVariableBindings();
-		for (VariableBinding vb : vbs) {
-			System.out.println(vb.getOid().toString() + " = " + vb.getVariable().toString());
-		}
-	}
+	//private void init(CommandResponder[] crs){
+		//init(Arrays.asList(crs));
+	//}
 }
