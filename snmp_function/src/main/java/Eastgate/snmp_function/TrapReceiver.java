@@ -2,6 +2,7 @@ package Eastgate.snmp_function;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.List;
 
 import org.snmp4j.CommandResponder;
 import org.snmp4j.MessageDispatcherImpl;
@@ -24,49 +25,44 @@ import org.snmp4j.util.MultiThreadedMessageDispatcher;
 import org.snmp4j.util.ThreadPool;
 
 public class TrapReceiver {
-	public TrapReceiver() throws UnknownHostException, IOException {
-		listenAddress = GenericAddress.parse("localhost/162");
-		init();
-	}
-	public TrapReceiver(String address) throws UnknownHostException, IOException {
-		init();
-		listenAddress = GenericAddress.parse(address);
-	}
+
 	private Address listenAddress;
 	private Snmp snmp;
-	private void init() throws UnknownHostException, IOException {
+
+	public TrapReceiver() throws UnknownHostException, IOException {
+		listenAddress = GenericAddress.parse("localhost/162");
+	}
+
+	public TrapReceiver(String address) throws UnknownHostException, IOException {
+		listenAddress = GenericAddress.parse(address);
+	}
+
+	public void init() throws UnknownHostException, IOException {
 		ThreadPool threadPool = ThreadPool.create("TrapPool", 2);
 		MultiThreadedMessageDispatcher dispatcher = new MultiThreadedMessageDispatcher(threadPool,
 				new MessageDispatcherImpl());
-		//Address listenAddress = GenericAddress.parse(System.getProperty(
-			//	"snmp4j.listenAddress", "localhost/162"));
 		TransportMapping transport;
 		if (listenAddress instanceof UdpAddress) {
-			transport = new DefaultUdpTransportMapping(
-					(UdpAddress) listenAddress);
+			transport = new DefaultUdpTransportMapping((UdpAddress) listenAddress);
 		} else {
-			transport = new DefaultTcpTransportMapping(
-					(TcpAddress) listenAddress);
+			transport = new DefaultTcpTransportMapping((TcpAddress) listenAddress);
 		}
 		snmp = new Snmp(dispatcher, transport);
 		snmp.getMessageDispatcher().addMessageProcessingModel(new MPv1());
 		snmp.getMessageDispatcher().addMessageProcessingModel(new MPv2c());
 		snmp.getMessageDispatcher().addMessageProcessingModel(new MPv3());
-		USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(
-				MPv3.createLocalEngineID()), 0);
+		USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(MPv3.createLocalEngineID()), 0);
 		SecurityModels.getInstance().addSecurityModel(usm);
 		snmp.listen();
 	}
-	
+
 	public void setCommandResponder(CommandResponder cr) throws UnknownHostException, IOException {
 		snmp.addCommandResponder(cr);
 	}
-	public void setMultiCommandResponder(CommandResponder [] crs) throws UnknownHostException, IOException {
-		for(CommandResponder cr : crs) {
+
+	public void setMultiCommandResponder(List<CommandResponder> crs) throws UnknownHostException, IOException {
+		for (CommandResponder cr : crs) {
 			setCommandResponder(cr);
 		}
 	}
-	//private void init(CommandResponder[] crs){
-		//init(Arrays.asList(crs));
-	//}
 }

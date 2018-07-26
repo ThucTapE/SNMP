@@ -16,6 +16,6 @@ public class TestTrapReceiver  {
 	public static void main(String[] args) throws UnknownHostException, IOException {
 		TrapReceiver trapReceiver = new TrapReceiver();
 		CommandResponder[] crs = {new ProcessPdu(), new ProcessPduMessage()};
-		trapReceiver.setMultiCommandResponder(crs);
+		trapReceiver.setCommandResponder(new ProcessPdu());
 	}
 }
